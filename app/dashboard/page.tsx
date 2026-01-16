@@ -1,34 +1,38 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import ProtectedRoute from '@/lib/protectedRoute'
 import { supabase } from '@/lib/supabase'
-import { useRouter } from 'next/navigation'
 
 export default function DashboardPage() {
-  const [user, setUser] = useState<any>(null)
-  const router = useRouter()
+  const [email, setEmail] = useState<string>('')
 
   useEffect(() => {
-    const session = supabase.auth.getSession().then(({ data }) => {
-      if (!data.session) {
-        router.push('/login')
-      } else {
-        setUser(data.session.user)
+    const fetchUser = async () => {
+      const { data, error } = await supabase.auth.getUser()
+
+      if (!error && data.user) {
+        setEmail(data.user.email ?? '')
       }
-    })
-  }, [router])
+    }
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut()
-    router.push('/login')
-  }
-
-  if (!user) return <div>Loading...</div>
+    fetchUser()
+  }, [])
 
   return (
-    <div style={{ padding: 40 }}>
-      <h1>Welcome, {user.email}</h1>
-      <button onClick={handleLogout}>Logout</button>
-    </div>
+    <ProtectedRoute>
+      <div style={{ padding: 40 }}>
+        <h1>Welcome, {email || 'Usuario'}</h1>
+
+        <button
+          onClick={async () => {
+            await supabase.auth.signOut()
+            window.location.href = '/login'
+          }}
+        >
+          Logout
+        </button>
+      </div>
+    </ProtectedRoute>
   )
 }
