@@ -1,34 +1,56 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
 
 export default function DashboardPage() {
-  const [user, setUser] = useState<any>(null)
   const router = useRouter()
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const session = supabase.auth.getSession().then(({ data }) => {
-      if (!data.session) {
-        router.push('/login')
+    const checkSession = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+
+      if (!session) {
+        router.replace('/login')
       } else {
-        setUser(data.session.user)
+        setLoading(false)
       }
-    })
+    }
+
+    checkSession()
   }, [router])
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
-    router.push('/login')
+    router.replace('/login')
   }
 
-  if (!user) return <div>Loading...</div>
+  if (loading) {
+    return <p>Chargement...</p>
+  }
 
   return (
-    <div style={{ padding: 40 }}>
-      <h1>Welcome, {user.email}</h1>
-      <button onClick={handleLogout}>Logout</button>
-    </div>
+    <main style={{ padding: '48px', maxWidth: '700px' }}>
+      <h1>Bienvenue sur CertiPrep</h1>
+
+      <p style={{ marginTop: '16px' }}>
+        CertiPrep vous aide à préparer le TEF grâce à des exercices inspirés
+        d’épreuves réelles, avec un retour structuré pour progresser efficacement.
+      </p>
+
+      <div style={{ marginTop: '32px', display: 'flex', gap: '16px' }}>
+        <button onClick={() => router.push('/dashboard/start')}>
+          Commencer la préparation
+        </button>
+
+        <button onClick={handleLogout}>
+          Se déconnecter
+        </button>
+      </div>
+    </main>
   )
 }
