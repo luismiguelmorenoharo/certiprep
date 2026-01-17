@@ -6,13 +6,12 @@ import { supabase } from '@/lib/supabase'
 
 export default function LoginPage() {
   const router = useRouter()
-
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [message, setMessage] = useState('')
 
   const handleLogin = async () => {
-    setMessage('') // limpiar mensaje previo
+    setMessage('')
 
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
@@ -21,10 +20,11 @@ export default function LoginPage() {
 
     if (error) {
       setMessage(error.message)
-    } else {
-      setMessage('Login successful!')
-      // Redirigir a dashboard
-      router.push('/dashboard')
+      return
+    }
+
+    if (data.session) {
+      router.replace('/dashboard')
     }
   }
 
@@ -34,7 +34,6 @@ export default function LoginPage() {
 
       <input
         placeholder="Email"
-        type="email"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
       />
@@ -42,17 +41,15 @@ export default function LoginPage() {
       <br /><br />
 
       <input
-        placeholder="Password"
         type="password"
+        placeholder="Password"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
       />
 
       <br /><br />
 
-      <button onClick={handleLogin}>
-        Login
-      </button>
+      <button onClick={handleLogin}>Login</button>
 
       <p>{message}</p>
     </div>
